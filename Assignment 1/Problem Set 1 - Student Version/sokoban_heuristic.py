@@ -15,25 +15,23 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
     # which is the number of get_actions calls during the search
     #NOTE: you can use problem.cache() to get a dictionary in which you can store information that will persist between calls of this function
     # This could be useful if you want to store the results heavy computations that can be cached and used across multiple calls of this function
-     # Check if the cache already contains the heuristic value for the given state
-    if state in problem.cache():
-        return problem.cache()[state]
+    # Check if the cache already contains the heuristic value for the given state
 
-    # Check if the state is deadlock
+
+    # Check if the state is deadlock return infinity (this node will never reach the goal)
     if is_deadlock(state):
-        problem.cache()[state] = 100000000
-        return 100000000
+        return float('inf')
 
     # calculate the sum of the distances of all the crates to their closest goals
     result = 0
     for crate in state.crates:
-        result += min(manhattan_distance(crate, goal) for goal in problem.layout.goals) 
-
+        result += min(manhattan_distance(crate, goal) for goal in state.layout.goals)
+    
+    # get the distance between the player and the nearest crates
     result += min(manhattan_distance(state.player, crate) for crate in state.crates) - 1
 	
     
 	# Store the heuristic value in the cache
-    problem.cache()[state] = result
     return result
 
 
@@ -52,6 +50,44 @@ def is_deadlock(state):
         if is_blocked_by_crates_or_wall(crate, state):
             return True
     return False
+
+	
+
+def is_corner(crate, state):
+    # check if a box is in corner
+    corners = [Point(1, 1), Point(-1, 1), Point(1, -1), Point(-1, -1)]
+    
+    if all(crate + corner not in state.layout.walkable for corner in corners):
+        return True
+    
+    return False
+
+
+
+def is_adjacent_to_wall_and_not_to_goal(crate, state):
+    # check if a box is adjacent to a wall
+    # get the nearest goal point using manhattan distance
+    nearest_distance = float('inf')
+    for goal in state.layout.goals:
+        m_distance = manhattan_distance(crate, goal)
+        if m_distance < nearest_distance :
+            nearest_distance = m_distance
+            nearest_goal = goal
+            
+    if (crate + Point(1,0)) not in state.layout.walkable : # crate has wall on the right
+        if crate.x > nearest_goal.x:
+            return True
+    if (crate + Point(-1,0)) not in state.layout.walkable: # crate has wall on the left   
+        if crate.x < nearest_goal.x:
+            return True
+    if (crate + Point(0,1)) not in state.layout.walkable: # crate has wall on the bottom
+        if crate.y > nearest_goal.y:
+            return True
+    if (crate + Point(0,-1)) not in state.layout.walkable: # crate has wall on the top
+        if crate.y < nearest_goal.y:
+            return True
+    return False
+
 
 def is_blocked_by_crates_or_wall(crate, state):
     x, y = crate.x, crate.y
@@ -76,40 +112,3 @@ def is_blocked_by_crates_or_wall(crate, state):
     return False
     
 
-
-
-def is_adjacent_to_wall_and_not_to_goal(crate, state):
-    # check if a box is adjacent to a wall
-    # get the nearest goal point using manhattan distance
-    nearest_distance = 100000000
-    for goal in state.layout.goals:
-        m_distance = manhattan_distance(crate, goal)
-        if m_distance < nearest_distance :
-            nearest_distance = m_distance
-            nearest_goal = goal
-
-    if (crate + Point(1,0)) not in state.layout.walkable : # crate has wall on the right
-        if crate.x > nearest_goal.x:
-            return True
-    if (crate + Point(-1,0)) not in state.layout.walkable: # crate has wall on the left   
-        if crate.x < nearest_goal.x:
-            return True
-    if (crate + Point(0,1)) not in state.layout.walkable: # crate has wall on the bottom
-        if crate.y > nearest_goal.y:
-            return True
-    if (crate + Point(0,-1)) not in state.layout.walkable: # crate has wall on the top
-        if crate.y < nearest_goal.y:
-            return True
-    return False	
-
-def is_corner(crate, state):
-    # check if a box is in corner
-    if (crate + Point(1,0)) not in state.layout.walkable and (crate + Point(0,1)) not in state.layout.walkable: # check top left corner
-        return True
-    if (crate + Point(-1,0)) not in state.layout.walkable and (crate + Point(0,1)) not in state.layout.walkable: # check top right corner
-        return True
-    if (crate + Point(1,0)) not in state.layout.walkable and (crate + Point(0,-1)) not in state.layout.walkable: # check bottom left corner
-        return True
-    if (crate + Point(-1,0)) not in state.layout.walkable and (crate + Point(0,-1)) not in state.layout.walkable: # check bottom right corner
-        return True
-    return False
