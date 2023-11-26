@@ -30,8 +30,7 @@ def strong_heuristic(problem: SokobanProblem, state: SokobanState) -> float:
     # get the distance between the player and the nearest crates
     result += min(manhattan_distance(state.player, crate) for crate in state.crates) - 1
 	
-    
-	# Store the heuristic value in the cache
+    # return the heuristic value
     return result
 
 
@@ -75,19 +74,18 @@ def is_adjacent_to_wall_and_not_to_goal(crate, state):
             nearest_goal = goal
             
     if (crate + Point(1,0)) not in state.layout.walkable : # crate has wall on the right
-        if crate.x > nearest_goal.x: # goal is on the crate's left
+        if crate.x > nearest_goal.x:
             return True
     if (crate + Point(-1,0)) not in state.layout.walkable: # crate has wall on the left   
-        if crate.x < nearest_goal.x: # goal is on the crate's right
+        if crate.x < nearest_goal.x:
             return True
     if (crate + Point(0,1)) not in state.layout.walkable: # crate has wall on the bottom
-        if crate.y > nearest_goal.y: # goal is on the crate's top
+        if crate.y > nearest_goal.y:
             return True
     if (crate + Point(0,-1)) not in state.layout.walkable: # crate has wall on the top
-        if crate.y < nearest_goal.y: # goal is on the crate's bottom
+        if crate.y < nearest_goal.y:
             return True
     return False
-
 
 
 def is_blocked_by_crates_or_wall(crate, state):
