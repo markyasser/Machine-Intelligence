@@ -42,8 +42,31 @@ def minimum_remaining_values(problem: Problem, domains: Dict[str, set]) -> str:
 # IMPORTANT: Don't use the domains inside the problem, use and modify the ones given by the "domains" argument 
 #            since they contain the current domains of unassigned variables only.
 def forward_checking(problem: Problem, assigned_variable: str, assigned_value: Any, domains: Dict[str, set]) -> bool:
-    #TODO: Write this function
-    NotImplemented()
+    # Iterate over the constraints of the problem
+    for constraint in problem.constraints:
+        # Check if the assigned variable is involved in the constraint
+        if assigned_variable in constraint.variables:
+            # Determine the other variable in the constraint
+            other_variable = constraint.variables[0] if constraint.variables[1] == assigned_variable else constraint.variables[1]
+            # Skip if the other variable is not in the domains
+            if other_variable not in domains:
+                continue
+            # Create a new domain for the other variable
+            new_domain = set()
+            # Iterate over the values in the domain of the other variable
+            for value in domains[other_variable]:
+                # Check if the assignment of the assigned variable and the value of the other variable satisfy the constraint
+                if constraint.is_satisfied(assignment={assigned_variable: assigned_value, other_variable: value}):
+                    # Add the value to the new domain
+                    new_domain.add(value)
+            # If the new domain is empty, return False
+            if not new_domain:
+                return False
+            # Update the domain of the other variable
+            domains[other_variable] = new_domain
+    # Return True if forward checking is successful
+    return True
+    
 
 # This function should return the domain of the given variable order based on the "least restraining value" heuristic.
 # IMPORTANT: This function should not modify any of the given arguments.
@@ -55,9 +78,35 @@ def forward_checking(problem: Problem, assigned_variable: str, assigned_value: A
 #            order them in ascending order (from the lowest to the highest value).
 # IMPORTANT: Don't use the domains inside the problem, use and modify the ones given by the "domains" argument 
 #            since they contain the current domains of unassigned variables only.
+
 def least_restraining_values(problem: Problem, variable_to_assign: str, domains: Dict[str, set]) -> List[Any]:
-    #TODO: Write this function
-    NotImplemented()
+    # Get the values in the domain of the variable
+    values = list(domains[variable_to_assign])
+    # Sort the values based on the count of restrained values
+    values.sort(key=lambda value: count_restrained_values(problem, variable_to_assign, value, domains))
+    # Return the sorted values
+    return values
+
+def count_restrained_values(problem: Problem, variable_to_assign: str, value: Any, domains: Dict[str, set]) -> int:
+    count = 0
+    # Iterate over the constraints of the problem
+    for constraint in problem.constraints:
+        # Check if the constraint is binary and involves the variable to assign
+        if isinstance(constraint, BinaryConstraint) and variable_to_assign in constraint.variables:
+            # Determine the other variable in the constraint
+            other_variable = constraint.variables[0] if constraint.variables[1] == variable_to_assign else constraint.variables[1]
+            # Check if the other variable is in the domains
+            if other_variable in domains:
+                # Iterate over the values in the domain of the other variable
+                for other_value in domains[other_variable]:
+                    # Check if the assignment of the variable to assign and the other variable's value satisfy the constraint
+                    if not constraint.is_satisfied(assignment={variable_to_assign: value, other_variable: other_value}):
+                        # Increment the count if the constraint is not satisfied
+                        count += 1
+    # Return the count of restrained values
+    return count
+
+    
 
 # This function should solve CSP problems using backtracking search with forward checking.
 # The variable ordering should be decided by the MRV heuristic.
@@ -69,6 +118,21 @@ def least_restraining_values(problem: Problem, variable_to_assign: str, domains:
 #            for every assignment including the initial empty assignment, EXCEPT for the assignments pruned by the forward checking.
 #            Also, if 1-Consistency deems the whole problem unsolvable, you shouldn't call "problem.is_complete" at all.
 def solve(problem: Problem) -> Optional[Assignment]:
-    #TODO: Write this function
-    NotImplemented()
+    if not one_consistency(problem):
+        return None
+    domains = {variable: problem.domains[variable] for variable in problem.variables}
+    return solve_helper(problem, {}, domains)
+
+def solve_helper(problem: Problem, assignment: Assignment, domains: Dict[str, set]) -> Optional[Assignment]:
+    if problem.is_complete(assignment):
+        return assignment
+    variable = minimum_remaining_values(problem, domains)
+    for value in least_restraining_values(problem, variable, domains):
+        if forward_checking(problem, variable, value, domains):
+            assignment[variable] = value
+            result = solve_helper(problem, assignment, domains)
+            if result is not None:
+                return result
+            assignment.pop(variable)
+    return None
     
