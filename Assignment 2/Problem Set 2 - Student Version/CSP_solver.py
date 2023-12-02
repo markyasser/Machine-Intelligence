@@ -121,16 +121,16 @@ def solve(problem: Problem) -> Optional[Assignment]:
     if not one_consistency(problem):
         return None
     domains = {variable: problem.domains[variable] for variable in problem.variables}
-    return solve_helper(problem, {}, domains)
+    return backtracking(problem, {}, domains)
 
-def solve_helper(problem: Problem, assignment: Assignment, domains: Dict[str, set]) -> Optional[Assignment]:
+def backtracking(problem: Problem, assignment: Assignment, domains: Dict[str, set]) -> Optional[Assignment]:
     if problem.is_complete(assignment):
         return assignment
     variable = minimum_remaining_values(problem, domains)
     for value in least_restraining_values(problem, variable, domains):
         if forward_checking(problem, variable, value, domains):
             assignment[variable] = value
-            result = solve_helper(problem, assignment, domains)
+            result = backtracking(problem, assignment, domains)
             if result is not None:
                 return result
             assignment.pop(variable)
