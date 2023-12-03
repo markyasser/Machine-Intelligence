@@ -78,12 +78,11 @@ def forward_checking(problem: Problem, assigned_variable: str, assigned_value: A
 #            order them in ascending order (from the lowest to the highest value).
 # IMPORTANT: Don't use the domains inside the problem, use and modify the ones given by the "domains" argument 
 #            since they contain the current domains of unassigned variables only.
-
 def least_restraining_values(problem: Problem, variable_to_assign: str, domains: Dict[str, set]) -> List[Any]:
     # Get the values in the domain of the variable
     values = list(domains[variable_to_assign])
-    # Sort the values based on the count of restrained values
-    values.sort(key=lambda value: count_restrained_values(problem, variable_to_assign, value, domains))
+    # Sort the values based on the count of restrained values and then in ascending order of the values
+    values.sort(key=lambda value: (count_restrained_values(problem, variable_to_assign, value, domains), value))
     # Return the sorted values
     return values
 
@@ -120,19 +119,24 @@ def count_restrained_values(problem: Problem, variable_to_assign: str, value: An
 def solve(problem: Problem) -> Optional[Assignment]:
     if not one_consistency(problem):
         return None
-    domains = {variable: problem.domains[variable] for variable in problem.variables}
-    return backtracking(problem, {}, domains)
+    return backtracking(problem, {}, problem.domains)
 
 def backtracking(problem: Problem, assignment: Assignment, domains: Dict[str, set]) -> Optional[Assignment]:
     if problem.is_complete(assignment):
         return assignment
+    
     variable = minimum_remaining_values(problem, domains)
+
     for value in least_restraining_values(problem, variable, domains):
-        if forward_checking(problem, variable, value, domains):
-            assignment[variable] = value
-            result = backtracking(problem, assignment, domains)
+        assignment_copy = assignment.copy()
+        domains_copy = domains.copy()
+
+        assignment_copy[variable] = value
+        del domains_copy[variable]
+        
+        if forward_checking(problem, variable, value, domains_copy):
+            result = backtracking(problem, assignment_copy, domains_copy)
             if result is not None:
                 return result
-            assignment.pop(variable)
     return None
-    
+
