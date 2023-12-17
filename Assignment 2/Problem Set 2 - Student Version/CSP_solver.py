@@ -122,21 +122,33 @@ def solve(problem: Problem) -> Optional[Assignment]:
     return backtracking(problem, {}, problem.domains)
 
 def backtracking(problem: Problem, assignment: Assignment, domains: Dict[str, set]) -> Optional[Assignment]:
+    # Check if the assignment is complete (all variables have values assigned)
     if problem.is_complete(assignment):
         return assignment
     
+    # Choose the next variable to assign a value to using the MRV heuristic
     variable = minimum_remaining_values(problem, domains)
 
+    # Iterate over the values for the selected variable using the least restraining value heuristic
     for value in least_restraining_values(problem, variable, domains):
+        # Create copies of the assignment and domains dictionaries to avoid modifying the original ones
         assignment_copy = assignment.copy()
         domains_copy = domains.copy()
 
+        # Assign the value to the variable in the assignment copy
         assignment_copy[variable] = value
+        
+        # Remove the variable from the domains copy since it has been assigned a value
         del domains_copy[variable]
         
+        # Perform forward checking to prune inconsistent values from the domains copy
         if forward_checking(problem, variable, value, domains_copy):
+            # Recursive call to continue the backtracking search with the updated assignment and domains
             result = backtracking(problem, assignment_copy, domains_copy)
+            
+            # If a solution is found, return it
             if result is not None:
                 return result
+    
+    # If no solution is found, return None
     return None
-
