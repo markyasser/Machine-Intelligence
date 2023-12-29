@@ -78,7 +78,11 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
             self.rng.seed(seed) # Initialize the random generator using the seed
         # TODO add your code here
         # IMPORTANT NOTE: Define the snake before calling generate_random_apple
-        NotImplemented()
+        x = self.width // 2
+        y = self.height // 2
+        self.snake = [Point(x, y)]
+        self.direction = Direction.LEFT
+        self.apple = self.generate_random_apple()
 
         return SnakeObservation(tuple(self.snake), self.direction, self.apple)
 
@@ -87,12 +91,17 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
         Returns a list of the possible actions that can be taken from the current state of the Snake game.
         Returns:
             A list of Directions, representing the possible actions that can be taken from the current state.
-
         """
-        # TODO add your code here
-        # a snake can wrap around the grid
-        # NOTE: The action order does not matter
-        NotImplemented()
+        possible_actions = []
+        opposite_direction = self.direction.opposite()
+
+        # Iterate over all possible actions
+        for action in Direction:
+            # Exclude the opposite direction and the NONE direction
+            if action != opposite_direction and action != Direction.NONE:
+                possible_actions.append(action)
+
+        return possible_actions
 
     def step(self, action: Direction) -> \
             Tuple[SnakeObservation, float, bool, Dict]:
@@ -110,10 +119,54 @@ class SnakeEnv(Environment[SnakeObservation, Direction]):
             - info (Dict): A dictionary containing any extra information. You can keep it empty.
         """
         # TODO Complete the following function
-        NotImplemented()
-
         done = False
         reward = 0
+        # Update the direction of the snake
+        self.direction = action
+
+        # Move the snake
+        head = self.snake[0]
+        if action == Direction.RIGHT:
+            new_head = Point((head.x + 1) % self.width, head.y)
+        elif action == Direction.UP:
+            new_head = Point(head.x, (head.y - 1) % self.height)
+        elif action == Direction.LEFT:
+            new_head = Point((head.x - 1) % self.width, head.y)
+        elif action == Direction.DOWN:
+            new_head = Point(head.x, (head.y + 1) % self.height)
+        
+
+        self.snake.insert(0, new_head)
+
+        # Check if the snake has collided with itself
+        if new_head in self.snake[1:]:
+            # Snake has bitten itself, game over
+            reward = -100
+            done = True
+            observation = SnakeObservation(tuple(self.snake), self.direction, self.apple)
+            return observation, reward, done, {}
+        else:
+            # Check if the snake has eaten the apple
+            if new_head == self.apple:
+                # Snake has eaten the apple, increase reward and generate a new apple
+                reward = 1
+                self.apple = self.generate_random_apple()
+            else:
+                # Snake has not eaten the apple, no reward
+                reward = 0
+
+            # Check if the snake has covered the entire level
+            if len(self.snake) == self.width * self.height:
+                # Snake has covered the entire level, game won
+                reward += 100
+                done = True
+            else:
+                done = False
+
+        # Remove the tail of the snake
+        if not done:
+            self.snake.pop()
+
         observation = SnakeObservation(tuple(self.snake), self.direction, self.apple)
         
         return observation, reward, done, {}
