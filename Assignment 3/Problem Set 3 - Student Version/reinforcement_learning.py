@@ -170,13 +170,15 @@ class QLearningAgent(RLAgent[S, A]):
     
     # Update the value of Q(state, action) using this transition via the Q-Learning update rule
     def update(self, env: Environment[S, A], state: S, action: A, reward: float, next_state: S, done: bool):
-        # TODO: Complete this function to update Q-table using the Q-Learning update rule
         # If done is True, then next_state is a terminal state in which case, we consider the Q-value of next_state to be 0
         if done:
             next_q_value = 0
         else:
             next_q_value = self.compute_utility(env, next_state)
+        
         current_q_value = self.compute_q(env, state, action)
+        
+        # Update the Q-value using the Q-Learning update rule
         self.Q[state][action] = current_q_value + self.learning_rate * (reward + self.discount_factor * next_q_value - current_q_value)
 
     # Save the Q-table to a json file
