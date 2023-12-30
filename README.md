@@ -1,4 +1,6 @@
 # Machine Intelligence 
+Implementation of different Machine Intelligence Algorithms
+
 ## Search 
 - BFS
 - DFS
