@@ -6,19 +6,19 @@
 - Greedy Best Search
 - A*
 
-# Constrain Satisfaction Problems (CSP)
+## Constrain Satisfaction Problems (CSP)
 - Forward Checking
 - Least Restraining Value
 - Backtracking Search
 - Cryptarithmetic problem
 
-# Games 
+## Games 
 - Minimax
 - Alfa Beta Pruning
 - Alpha Beta Pruning with Move Ordering
 - Expectimax Search
 
-# Reinforcement Learning
+## Reinforcement Learning
 - Value Iteration
 - Sarsa
 - Q-Learning
