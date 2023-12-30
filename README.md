@@ -6,7 +6,7 @@
 - Greedy Best Search
 - A*
 
-# Constrain Satisfaction Problems 
+# Constrain Satisfaction Problems (CSP)
 - Forward Checking
 - Least Restraining Value
 - Backtracking Search
